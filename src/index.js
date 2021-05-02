@@ -6,7 +6,7 @@ const { get } = require('mongoose');
 
 const bot = new Discord.Client();
 
-const token = 'ODMwMjg2MzY2ODIyNjI5Mzc2.YHEebw.RobW4SWWHIsyGFcF89xr2hCYjsU';
+const token = 'TOKEN_DISCORD';
 
 const channels = 
     [
@@ -34,6 +34,10 @@ const channels =
 
 
 bot.login(token)
+bot.on('ready', async () => {
+    console.log('Ready for use')    
+})
+
 bot.on('message', async () => {
     //console.log('Ready for use')
     bot.user.setActivity( `${await getNumberOfCurrentPlayers()}`, { type: 'PLAYING'});
@@ -44,9 +48,7 @@ bot.on('message', async () => {
 bot.on('message', async (msg) => {
 
     const message_text = msg.content
-    
-
-
+ 
     if (message_text.startsWith("!announce")){
 
         let command;
@@ -68,10 +70,31 @@ bot.on('message', async (msg) => {
         }
     }
 
+    if (msg.content === '!players'){
+        const numberOfPlayersOnline = await getNumberOfCurrentPlayers();
+        msg.reply(numberOfPlayersOnline + ' Players Online');
+    }
+
+    if (message_text.startsWith("!suggest")){
+
+        const suggestion = message_text.split('$')[1]
+        const {id} = getChannelbyName('feedbacks')
+        const channel_tosendmsg = bot.channels.cache.find(channel => channel.id === id)
+        var test = await channel_tosendmsg.send("> "+"Suggestion from "+msg.author.username+" \n > "+suggestion+"")
+        await test.react('✅')
+        await test.react('🤷🏻')
+        await test.react('❌')
+        console.log(test.reactions.cache.get('✅').count)
+        console.log(test.reactions.cache.get('🤷🏻').count)
+        console.log(test.reactions.cache.get('❌').count)
+    }
+
     if(message_text.startsWith("!review")){
 
         let suggestions = [];
         let messages = [];
+        let target_suggestions = [];
+        let final_report = '';
         const {id} = getChannelbyName('feedbacks')
         const channel = bot.channels.cache.get(id);
         messages = await channel.messages.fetch({ limit: 100 }).then(messages => {
@@ -97,31 +120,29 @@ bot.on('message', async (msg) => {
         //const bestsuggestion = messages.filter(message => message.id === suggestions[0].id);
         const {id : idReview} = getChannelbyName('review-feedbacks')
         const channel_tosendmsg = bot.channels.cache.find(channel => channel.id === idReview)
-        channel_tosendmsg.send(suggestions[0].content)
 
+        target_suggestions = suggestions.slice(0,5);
+
+
+        target_suggestions.forEach(async(obj,index) => {          
+            let content = obj.content;
+            if(index==target_suggestions.length-1){
+                content += `\n > ${obj.check} ${obj.check>1?'points':'point'}!`
+            }else{
+                content += `\n > ${obj.check} ${obj.check>1?'points':'point'}!`
+                content += `\n > \n`
+            }
+            final_report += content;
+        });
+
+        await channel_tosendmsg.send(final_report);
     }
 
 
     
-    if (message_text.startsWith("!suggest")){
 
-            const suggestion = message_text.split('$')[1]
-            const {id} = getChannelbyName('feedbacks')
-            const channel_tosendmsg = bot.channels.cache.find(channel => channel.id === id)
-            var test = await channel_tosendmsg.send("> "+"Suggestion from "+msg.author.username+" \n > "+suggestion+"")
-            await test.react('✅')
-            await test.react('🤷🏻')
-            await test.react('❌')
-            console.log(test.reactions.cache.get('✅').count)
-            console.log(test.reactions.cache.get('🤷🏻').count)
-            console.log(test.reactions.cache.get('❌').count)
-           
-    }
 
-    if (msg.content === '!players'){
-        const numberOfPlayersOnline = await getNumberOfCurrentPlayers();
-        msg.reply(numberOfPlayersOnline + ' Players Online');
-    }
+
 
     learnSkydome(msg);
 
