@@ -2,11 +2,10 @@ const Discord = require('discord.js');
 
 const learnSkydome = require('./learnSkydome');
 const getNumberOfCurrentPlayers = require('./getNumberOfCurrentPlayers');
-const { get } = require('mongoose');
 
 const bot = new Discord.Client();
 
-const token = 'TOKEN_DISCORD';
+const token = 'ODMwMjg2MzY2ODIyNjI5Mzc2.YHEebw.MgBxxYSnvc2pfQbcwyyoWBID-Ks';
 
 const channels = 
     [
@@ -28,6 +27,11 @@ const channels =
         {
             name : 'review-feedbacks',
             id : '836015183352168539'
+        },
+
+        {
+            name : 'testes',
+            id : '832312633797378058'
         }
 
     ]
@@ -75,18 +79,26 @@ bot.on('message', async (msg) => {
         msg.reply(numberOfPlayersOnline + ' Players Online');
     }
 
-    if (message_text.startsWith("!suggest")){
+    if(msg.channel.name === 'testes'){
 
-        const suggestion = message_text.split('$')[1]
-        const {id} = getChannelbyName('feedbacks')
-        const channel_tosendmsg = bot.channels.cache.find(channel => channel.id === id)
-        var test = await channel_tosendmsg.send("> "+"Suggestion from "+msg.author.username+" \n > "+suggestion+"")
-        await test.react('✅')
-        await test.react('🤷🏻')
-        await test.react('❌')
-        console.log(test.reactions.cache.get('✅').count)
-        console.log(test.reactions.cache.get('🤷🏻').count)
-        console.log(test.reactions.cache.get('❌').count)
+        if (message_text.startsWith("!sugestão")){
+
+            if (message_text.toLowerCase().includes('o que acontece') && message_text.toLowerCase().includes('por que isso tem que mudar')){
+
+                const suggestion = message_text.split('!sugestão')[1]
+                const {id} = getChannelbyName('feedbacks')
+                const channel_tosendmsg = bot.channels.cache.find(channel => channel.id === id)
+                const sent_message = await channel_tosendmsg.send("```"+"**Suggestion from "+msg.author.username+"** "+suggestion+"```")
+                await sent_message.react('✅')
+                await sent_message.react('🤷🏻')
+                await sent_message.react('❌')
+
+            }   
+
+        }
+
+        await msg.delete({ timeout: 1000 })
+
     }
 
     if(message_text.startsWith("!review")){
@@ -127,22 +139,21 @@ bot.on('message', async (msg) => {
         target_suggestions.forEach(async(obj,index) => {          
             let content = obj.content;
             if(index==target_suggestions.length-1){
-                content += `\n > ${obj.check} ${obj.check>1?'points':'point'}!`
+                content += `\n \n🔵 ${obj.check} ${obj.check>1?'points':'point'}!`
             }else{
-                content += `\n > ${obj.check} ${obj.check>1?'points':'point'}!`
-                content += `\n > \n`
+                content += `\n \n🔵 ${obj.check} ${obj.check>1?'points':'point'}!`
+                content += `\n  \n`
             }
-            final_report += content;
+            final_report += '```'+content.replace(/```/g, '')+'```'+'\n';
         });
-
+        
+      //  final_report = final_report.replace(/```/g, '')
+      //  final_report = '```'+final_report+'```'
         await channel_tosendmsg.send(final_report);
+
     }
 
-
     
-
-
-
 
     learnSkydome(msg);
 
